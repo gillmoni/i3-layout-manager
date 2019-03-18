@@ -365,7 +365,8 @@ p' -c "wqa" -- "$LAYOUT_FILE"
   # $VIM_BIN $HEADLESS -nEs -c 'normal ggO[Go]' -c "wqa" -- "$LAYOUT_FILE" 
   sed -i -e 's/\$",/\$"/g' "$LAYOUT_FILE" 
   sed -i -e 's/"",/""/g' "$LAYOUT_FILE"
-
+  sed -i ';$d' "$LAYOUT_FILE"
+  sed -i ';$d' "$LAYOUT_FILE"
 
   # autoformat the file
   $VIM_BIN $HEADLESS -nEs -c 'normal gg=G' -c "wqa" -- "$LAYOUT_FILE"
