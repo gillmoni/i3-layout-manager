@@ -1,4 +1,5 @@
 #!/bin/bash
+# echo "" > ~/tmp2.txt #MONI: DEBUG
 # Author: klaxalk (klaxalk@gmail.com, github.com/klaxalk)
 #
 # Dependencies:
@@ -132,7 +133,8 @@ if [[ "$ACTION" = "LOAD LAYOUT" ]]; then
 
   # then we can apply to chosen layout
   i3-msg "append_layout $LAYOUT_FILE" > $LOG_FILE 2>&1
-
+  echo "i3-msg append_layout $LAYOUT_FILE" >> ~/tmp2.MONI: DEBUG
+  echo "$WINDOWS" >> ~/tmp2.MONI: DEBUG
   # and then we can reintroduce the windows back to the workspace
   for window in $WINDOWS; do
     HAS_PID=$(xdotool getwindowpid $window 2>&1 | grep "pid" | wc -l)
@@ -166,6 +168,9 @@ MATCH ANY" | rofi -i -dmenu -p "How to identify windows? (xprop style)")
   fi
 
   ALL_WS_FILE=$LAYOUT_PATH/all-layouts.json
+  echo "LAYOUT_PATH = $$LAYOUT_PATH" >> ~/tmp2.MONI: DEBUG
+  echo "ALL_WS_FILE = $ALL_WS_FILE" >> ~/tmp2.MONI: DEBUG
+  echo "LAYOUT_FILE = $LAYOUT_FILE" >> ~/tmp2.MONI: DEBUG
 
   CURRENT_MONITOR=$(i3-msg -t get_workspaces | jq '.[] | select(.focused==true).output' | cut -d"\"" -f2)
 
@@ -208,7 +213,8 @@ MATCH ANY" | rofi -i -dmenu -p "How to identify windows? (xprop style)")
   # all-tree file we can find the workspace part.
 
   # remove the floating window part, that would screw up out matching
-  $VIM_BIN $HEADLESS -nEs -c '%g/"floating_con"/norm ?{nd%' -c "wqa" -- "$LAYOUT_FILE"
+  $VIM_BIN $HEADLESS -nEs -c '%g/"floating_con"/norm ?{
+nd%' -c "wqa" -- "$LAYOUT_FILE"
 
   # remove comments
   $VIM_BIN $HEADLESS -nEs -c '%g/\/\//norm dd' -c "wqa" -- "$LAYOUT_FILE"
@@ -280,7 +286,8 @@ MATCH ANY" | rofi -i -dmenu -p "How to identify windows? (xprop style)")
   # the information about the split type
   cat $ALL_WS_FILE | cat - $LAYOUT_FILE > /tmp/tmp.txt && mv /tmp/tmp.txt $LAYOUT_FILE
   # add closing bracked at the end
-  $VIM_BIN $HEADLESS -nEs -c 'normal Go]}' -c "wqa" -- "$LAYOUT_FILE"
+  $VIM_BIN $HEADLESS -nEs -c 'normal Go]
+}' -c "wqa" -- "$LAYOUT_FILE"
 
   # now we have to do some postprocessing on it, all is even advices on the official website
   # https://i3wm.org/docs/layout-saving.html
@@ -333,22 +340,32 @@ MATCH ANY" | rofi -i -dmenu -p "How to identify windows? (xprop style)")
   $VIM_BIN $HEADLESS -nEs -c '%g/\/\//norm dd' -c "wqa" -- "$LAYOUT_FILE"
 
   # add a missing comma to the last element of array we just deleted
-  $VIM_BIN $HEADLESS -nEs -c '%g/swallows/norm j^%k:s/,$//g' -c "wqa" -- "$LAYOUT_FILE"
+  $VIM_BIN $HEADLESS -nEs -c '%g/swallows/norm j^%k:s/,$//g
+' -c "wqa" -- "$LAYOUT_FILE"
 
   # delete all empty lines
   $VIM_BIN $HEADLESS -nEs -c '%g/^$/norm dd' -c "wqa" -- "$LAYOUT_FILE"
 
   # pick up floating containers and move them out of the root container
-  $VIM_BIN $HEADLESS -nEs -c '%g/floating_con/norm ?{nd%GAp' -c "wqa" -- "$LAYOUT_FILE"
+  $VIM_BIN $HEADLESS -nEs -c '%g/floating_con/norm ?{
+nd%GA
+p' -c "wqa" -- "$LAYOUT_FILE"
 
   # delete all empty lines
   $VIM_BIN $HEADLESS -nEs -c '%g/^$/norm dd' -c "wqa" -- "$LAYOUT_FILE"
 
   # add missing commas between the newly created inner parts of the root element
-  $VIM_BIN $HEADLESS -nEs -c '%s/}\n{/},{/g' -c "wqa" -- "$LAYOUT_FILE"
-
+  $VIM_BIN $HEADLESS -nEs -c '%s/}\n{/},
+{/g' -c "wqa" -- "$LAYOUT_FILE"
+  
+  # Moni : Note following changes.
+  # Change, Use sed to replace unwanted items, JSON linter used https://jsonlint.com/
+  # Change, Adding [Go] to is not required.
   # surroun everythin in []
-  $VIM_BIN $HEADLESS -nEs -c 'normal ggO[Go]' -c "wqa" -- "$LAYOUT_FILE"
+  # $VIM_BIN $HEADLESS -nEs -c 'normal ggO[Go]' -c "wqa" -- "$LAYOUT_FILE" 
+  sed -i -e 's/\$",/\$"/g' "$LAYOUT_FILE" 
+  sed -i -e 's/"",/""/g' "$LAYOUT_FILE"
+
 
   # autoformat the file
   $VIM_BIN $HEADLESS -nEs -c 'normal gg=G' -c "wqa" -- "$LAYOUT_FILE"
@@ -370,3 +387,4 @@ if [[ "$ACTION" = "DELETE LAYOUT" ]]; then
 fi
 
 # #}
+
