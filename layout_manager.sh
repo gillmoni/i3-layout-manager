@@ -1,5 +1,4 @@
 #!/bin/bash
-# echo "" > ~/tmp2.txt #MONI: DEBUG
 # Author: klaxalk (klaxalk@gmail.com, github.com/klaxalk)
 #
 # Dependencies:
@@ -133,8 +132,7 @@ if [[ "$ACTION" = "LOAD LAYOUT" ]]; then
 
   # then we can apply to chosen layout
   i3-msg "append_layout $LAYOUT_FILE" > $LOG_FILE 2>&1
-  echo "i3-msg append_layout $LAYOUT_FILE" >> ~/tmp2.MONI: DEBUG
-  echo "$WINDOWS" >> ~/tmp2.MONI: DEBUG
+
   # and then we can reintroduce the windows back to the workspace
   for window in $WINDOWS; do
     HAS_PID=$(xdotool getwindowpid $window 2>&1 | grep "pid" | wc -l)
@@ -168,9 +166,6 @@ MATCH ANY" | rofi -i -dmenu -p "How to identify windows? (xprop style)")
   fi
 
   ALL_WS_FILE=$LAYOUT_PATH/all-layouts.json
-  echo "LAYOUT_PATH = $$LAYOUT_PATH" >> ~/tmp2.MONI: DEBUG
-  echo "ALL_WS_FILE = $ALL_WS_FILE" >> ~/tmp2.MONI: DEBUG
-  echo "LAYOUT_FILE = $LAYOUT_FILE" >> ~/tmp2.MONI: DEBUG
 
   CURRENT_MONITOR=$(i3-msg -t get_workspaces | jq '.[] | select(.focused==true).output' | cut -d"\"" -f2)
 
@@ -340,7 +335,7 @@ nd%' -c "wqa" -- "$LAYOUT_FILE"
   $VIM_BIN $HEADLESS -nEs -c '%g/\/\//norm dd' -c "wqa" -- "$LAYOUT_FILE"
 
   # add a missing comma to the last element of array we just deleted
-  $VIM_BIN $HEADLESS -nEs -c '%g/swallows/norm j^%k:s/,$//g
+  $VIM_BIN $HEADLESS -nEs -c '%g/swallows/norm j^%k:s/,$//g
 ' -c "wqa" -- "$LAYOUT_FILE"
 
   # delete all empty lines
@@ -349,7 +344,7 @@ nd%' -c "wqa" -- "$LAYOUT_FILE"
   # pick up floating containers and move them out of the root container
   $VIM_BIN $HEADLESS -nEs -c '%g/floating_con/norm ?{
 nd%GA
-p' -c "wqa" -- "$LAYOUT_FILE"
+p' -c "wqa" -- "$LAYOUT_FILE"
 
   # delete all empty lines
   $VIM_BIN $HEADLESS -nEs -c '%g/^$/norm dd' -c "wqa" -- "$LAYOUT_FILE"
@@ -357,14 +352,16 @@ p' -c "wqa" -- "$LAYOUT_FILE"
   # add missing commas between the newly created inner parts of the root element
   $VIM_BIN $HEADLESS -nEs -c '%s/}\n{/},
 {/g' -c "wqa" -- "$LAYOUT_FILE"
-  
-  # Moni : Note following changes.
-  # Change, Use sed to replace unwanted items, JSON linter used https://jsonlint.com/
-  # Change, Adding [Go] to is not required.
+
   # surroun everythin in []
-  # $VIM_BIN $HEADLESS -nEs -c 'normal ggO[Go]' -c "wqa" -- "$LAYOUT_FILE" 
+  $VIM_BIN $HEADLESS -nEs -c 'normal ggO[Go]' -c "wqa" -- "$LAYOUT_FILE"
   sed -i -e 's/\$",/\$"/g' "$LAYOUT_FILE" 
   sed -i -e 's/"",/""/g' "$LAYOUT_FILE"
+  
+  #Remove null character
+  sed -i -e 's/\x00//g' "$LAYOUT_FILE"
+
+  #Delete last two lines.
   sed -i ';$d' "$LAYOUT_FILE"
   sed -i ';$d' "$LAYOUT_FILE"
 
@@ -388,4 +385,3 @@ if [[ "$ACTION" = "DELETE LAYOUT" ]]; then
 fi
 
 # #}
-
